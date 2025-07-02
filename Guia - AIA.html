@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Interativo para Avaliação de Impacto Ambiental (AIA)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Lato:wght@400;700&family=League+Spartan:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D405B;
+            overflow-x: hidden; /* Prevents horizontal scrolling on mobile */
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .font-league-spartan {
+            font-family: 'League Spartan', sans-serif;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #81B29A;
+            border-bottom-color: #81B29A;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background-color: #81B29A;
+            color: #FFFFFF;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #6a947e;
+        }
+        .btn-ai {
+            background: linear-gradient(to right, #81B29A, #6a947e);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        table th, table td {
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #81B29A;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #global-tooltip {
+            position: fixed;
+            display: none;
+            padding: 0.5rem 1rem;
+            background-color: #333;
+            color: white;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            z-index: 100;
+            white-space: pre-line;
+            max-width: 250px;
+        }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/60 backdrop-blur-lg shadow-sm sticky top-0 z-40">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="#hero" class="flex items-center space-x-3">
+                        <img src="https://i.postimg.cc/3J9PzJRt/Macambira.png" class="h-10" alt="Macambira Logo">
+                        <span class="text-xl font-bold text-[#3D405B] font-league-spartan">Macambira</span>
+                    </a>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#intro" class="nav-link px-3 py-2 rounded-md text-sm">O que é AIA</a>
+                        <a href="#origem" class="nav-link px-3 py-2 rounded-md text-sm">Origem</a>
+                        <a href="#metodologia" class="nav-link px-3 py-2 rounded-md text-sm">Metodologia</a>
+                        <a href="#calculadora" class="nav-link px-3 py-2 rounded-md text-sm">Calculadora</a>
+                        <a href="#ia-identifier" class="nav-link px-3 py-2 rounded-md text-sm">✨ Identificador IA</a>
+                        <a href="#medidas" class="nav-link px-3 py-2 rounded-md text-sm">Gerenciamento</a>
+                        <a href="#exemplo" class="nav-link px-3 py-2 rounded-md text-sm">Exemplo Prático</a>
+                    </div>
+                </div>
+                <div class="-mr-2 flex lg:hidden">
+                    <button id="mobile-menu-button" type="button" class="bg-gray-100 inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Abrir menu principal</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="lg:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white/80 backdrop-blur-lg">
+                <a href="#intro" class="nav-link block px-3 py-2 rounded-md text-base">O que é AIA</a>
+                <a href="#origem" class="nav-link block px-3 py-2 rounded-md text-base">Origem</a>
+                <a href="#metodologia" class="nav-link block px-3 py-2 rounded-md text-base">Metodologia</a>
+                <a href="#calculadora" class="nav-link block px-3 py-2 rounded-md text-base">Calculadora</a>
+                <a href="#ia-identifier" class="nav-link block px-3 py-2 rounded-md text-base">✨ Identificador IA</a>
+                <a href="#medidas" class="nav-link block px-3 py-2 rounded-md text-base">Gerenciamento</a>
+                <a href="#exemplo" class="nav-link block px-3 py-2 rounded-md text-base">Exemplo Prático</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="relative bg-cover bg-center py-20 md:py-32" style="background-image: url('https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=2070&auto=format&fit=crop');">
+            <div class="absolute inset-0 bg-black/60"></div>
+            <div class="relative container mx-auto px-6 text-center max-w-7xl">
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">Desvendando a Avaliação de Impacto Ambiental</h1>
+                <p class="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-200">Uma ferramenta interativa com o uso da Inteligência Artificial, para entender, calcular e mitigar os impactos de qualquer empreendimento.</p>
+                <a href="#intro" class="mt-8 inline-block font-bold py-3 px-8 rounded-full text-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all">Comece a Explorar</a>
+            </div>
+        </section>
+
+        <section id="intro" class="py-16 md:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">O que é a Avaliação de Impacto Ambiental (AIA)?</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Esta seção introduz o conceito fundamental da AIA, sua finalidade, importância e os princípios que a norteiam.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-[#E07A5F]/20 text-[#E07A5F] text-2xl font-bold mb-4">1</div>
+                        <h3 class="text-xl font-bold mb-2">Definição e Objetivo</h3>
+                        <p class="text-gray-600">A AIA é um instrumento de política ambiental para analisar a viabilidade de projetos, garantindo que o desenvolvimento ocorra em harmonia com o meio ambiente.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-[#81B29A]/20 text-[#81B29A] text-2xl font-bold mb-4">2</div>
+                        <h3 class="text-xl font-bold mb-2">Base Legal</h3>
+                        <p class="text-gray-600">No Brasil, é regida pela Resolução CONAMA nº 001/86, que define diretrizes para o Estudo de Impacto Ambiental (EIA) e o Relatório de Impacto Ambiental (RIMA).</p>
+                    </div>
+                    <div class="card p-6 md:col-span-2 lg:col-span-1">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-[#F2CC8F]/20 text-[#F2CC8F] text-2xl font-bold mb-4">3</div>
+                        <h3 class="text-xl font-bold mb-2">Importância</h3>
+                        <p class="text-gray-600">Fornece informações para o licenciamento, subsidia a participação pública e ajuda a projetar empreendimentos mais sustentáveis, prevenindo danos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="origem" class="relative bg-cover bg-center py-16 md:py-24" style="background-image: url('https://i.postimg.cc/7LJM1Xdg/Gemini-Generated-Image-kq6ihqkq6ihqkq6i.png');">
+            <div class="absolute inset-0 bg-black/70"></div>
+            <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">De onde vêm os Impactos Ambientais?</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-200">Tudo começa com uma atividade do projeto, que gera um aspecto ambiental, e este, por sua vez, causa um impacto. Veja a relação de causa e efeito abaixo.</p>
+                </div>
+                <div class="mt-12 flex flex-col md:flex-row items-center justify-center md:items-stretch md:gap-x-2">
+                    <div class="flex-1 flex flex-col items-center text-center">
+                         <div class="card p-6 text-center w-full flex flex-col bg-white/10 backdrop-blur-sm border border-white/20 h-full">
+                            <h3 class="text-xl font-bold mb-2 text-white">Atividade</h3>
+                            <div class="flex-grow">
+                                <p class="text-gray-200">Ação específica realizada durante o projeto.</p>
+                                <p class="mt-4 font-semibold text-sm bg-black/20 text-white p-2 rounded">Ex: Operação de máquinas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-300 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="card p-6 text-center w-full flex flex-col bg-white/10 backdrop-blur-sm border border-white/20 h-full">
+                            <h3 class="text-xl font-bold mb-2 text-white">Aspecto Ambiental</h3>
+                            <div class="flex-grow">
+                                <p class="text-gray-200">Elemento da atividade que pode interagir com o ambiente.</p>
+                                <p class="mt-4 font-semibold text-sm bg-black/20 text-white p-2 rounded">Ex: Emissão de gases.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-300 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                         <div class="card p-6 text-center w-full flex flex-col bg-white/10 backdrop-blur-sm border border-white/20 h-full">
+                            <h3 class="text-xl font-bold mb-2 text-white">Impacto Ambiental</h3>
+                            <div class="flex-grow">
+                                <p class="text-gray-200">Qualquer modificação no meio ambiente, resultante do aspecto.</p>
+                                <p class="mt-4 font-semibold text-sm bg-black/20 text-white p-2 rounded">Ex: Alteração da qualidade do ar.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="metodologia" class="py-16 md:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">Metodologia da AIA</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Aqui, detalhamos o fluxo do processo de uma AIA com ícones representativos e setas para clarificar a sequência lógica das atividades.</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center md:items-stretch md:gap-x-2">
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#81B29A] text-white text-5xl border-4 border-white shadow-lg mb-4"><span>🔍</span></div>
+                        <h3 class="font-bold text-lg">Diagnóstico Ambiental</h3>
+                        <p class="text-sm text-gray-600 mt-2 px-2">Levantamento dos recursos ambientais da área de influência.</p>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-400 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#E07A5F] text-white text-5xl border-4 border-white shadow-lg mb-4"><span>📝</span></div>
+                        <h3 class="font-bold text-lg">Identificação de Impactos</h3>
+                        <p class="text-sm text-gray-600 mt-2 px-2">Identificação das possíveis alterações nos meios físico, biótico e socioeconômico.</p>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-400 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#3D405B] text-white text-5xl border-4 border-white shadow-lg mb-4"><span>📊</span></div>
+                        <h3 class="font-bold text-lg">Análise e Valoração</h3>
+                        <p class="text-sm text-gray-600 mt-2 px-2">Análise detalhada e cálculo da significância dos impactos.</p>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-400 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#F2CC8F] text-white text-5xl border-4 border-white shadow-lg mb-4"><span>🛡️</span></div>
+                        <h3 class="font-bold text-lg">Definição de Medidas</h3>
+                        <p class="text-sm text-gray-600 mt-2 px-2">Proposição de medidas para prevenir, mitigar, compensar e potencializar os impactos.</p>
+                    </div>
+                    <div class="flex items-center justify-center shrink-0 w-12 my-4 md:my-0"><div class="w-4 h-4 border-b-4 border-r-4 border-gray-400 transform rotate-45 md:-rotate-45"></div></div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#8D99AE] text-white text-5xl border-4 border-white shadow-lg mb-4"><span>📋</span></div>
+                        <h3 class="font-bold text-lg">Programas Ambientais</h3>
+                        <p class="text-sm text-gray-600 mt-2 px-2">Elaboração de programas para monitoramento dos impactos e da eficácia das medidas.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculadora" class="relative bg-cover bg-center py-16 md:py-24" style="background-image: url('https://images.unsplash.com/photo-1605265536375-622ec6325c0d?q=80&w=1740&auto=format&fit=crop');">
+            <div class="absolute inset-0 bg-black/70"></div>
+            <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Calculadora de Significância de Impacto Ambiental</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-200">Use a ferramenta interativa para desmistificar o cálculo da significância de um impacto, manipulando os parâmetros e vendo o resultado em tempo real.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+                    <div class="card p-6 md:p-8 bg-white/10 backdrop-blur-sm border border-white/20">
+                        <h3 class="text-2xl font-bold mb-6 text-white">Avalie um Impacto Hipotético</h3>
+                        <div class="space-y-4">
+                           <div>
+                                <label for="natureza" class="mb-1 flex items-center gap-2 text-sm font-medium text-gray-100">
+                                    <span>Natureza</span>
+                                    <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="É um impacto benéfico (positivo) ou prejudicial (negativo)?">ⓘ</span>
+                                </label>
+                                <select id="natureza" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm"><option value="1">Positivo</option><option value="-1" selected>Negativo</option></select>
+                           </div>
+                           <div>
+                                <label for="magnitude" class="mb-1 flex items-center gap-2 text-sm font-medium text-gray-100">
+                                    <span>Magnitude (Intensidade)</span>
+                                     <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="Quão forte é a alteração: alta, média ou baixa?">ⓘ</span>
+                                </label>
+                                <select id="magnitude" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm"><option value="1">Baixa</option><option value="2" selected>Média</option><option value="3">Alta</option></select>
+                           </div>
+                           <div>
+                                <label for="abrangencia" class="mb-1 flex items-center gap-2 text-sm font-medium text-gray-100">
+                                    <span>Abrangência (Espacial)</span>
+                                    <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="Qual a área afetada: local, regional ou estratégica?">ⓘ</span>
+                                </label>
+                                <select id="abrangencia" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm"><option value="1">Local</option><option value="2" selected>Regional</option><option value="3">Estratégica</option></select>
+                           </div>
+                           <div>
+                                <label for="duracao" class="mb-1 flex items-center gap-2 text-sm font-medium text-gray-100">
+                                    <span>Duração (Temporal)</span>
+                                    <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="Quanto tempo dura: temporária, longo prazo ou permanente?">ⓘ</span>
+                                </label>
+                                <select id="duracao" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm"><option value="1">Temporária</option><option value="2" selected>Longo Prazo</option><option value="3">Permanente</option></select>
+                           </div>
+                           <div>
+                                <label for="reversibilidade" class="mb-1 flex items-center gap-2 text-sm font-medium text-gray-100">
+                                    <span>Reversibilidade</span>
+                                    <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="O ambiente pode se recuperar de forma total (reversível), parcial ou o dano é irreversível?">ⓘ</span>
+                                </label>
+                                <select id="reversibilidade" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm"><option value="1">Reversível</option><option value="2" selected>Parcialmente Reversível</option><option value="3">Irreversível</option></select>
+                           </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="chart-container"><canvas id="impactChart"></canvas></div>
+                        <div id="result" class="mt-6 text-center card p-6 w-full max-w-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                            <h4 class="text-lg font-bold text-white">Significância do Impacto</h4>
+                            <p id="result-text" class="text-3xl font-bold mt-2 text-[#E07A5F]">-9 (Alta)</p>
+                            <p class="text-xs text-gray-300 mt-2">*Este é um modelo didático simplificado. A valoração real se baseia em metodologias técnicas detalhadas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="ia-identifier" class="py-16 md:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">✨ Identificador de Impactos Ambientais com IA</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Agora é com você! Descreva uma atividade de um projeto e deixe a IA fazer sua mágica, identificando os potenciais aspectos ambientais e os impactos ambientais associados.</p>
+                </div>
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex gap-2">
+                        <input type="text" id="activity-input" class="flex-grow p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A]" placeholder="Ex: Construção de canteiro de obras...">
+                        <button id="identify-impact-btn" class="btn-primary btn-ai font-bold py-3 px-6 rounded-md shadow-md flex items-center justify-center">Analisar</button>
+                    </div>
+                    <div id="ia-identifier-results" class="mt-8"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="medidas" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">Gerenciamento de Impactos Ambientais</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Após avaliar os impactos, o próximo passo é gerenciá-los. Esta seção organiza as possíveis ações em quatro categorias claras, com exemplos práticos.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="card p-6 text-center">
+                        <div class="flex items-center justify-center mx-auto h-16 w-16 rounded-full bg-blue-100 text-blue-600 text-3xl mb-4">🛡️</div>
+                        <h3 class="text-xl font-bold mb-2">Prevenir</h3>
+                        <p class="text-gray-600">Ações que evitam a ocorrência de um impacto negativo. Ex: alteração da localização do projeto, uso de tecnologia mais limpa.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="flex items-center justify-center mx-auto h-16 w-16 rounded-full bg-yellow-100 text-yellow-600 text-3xl mb-4">📉</div>
+                        <h3 class="text-xl font-bold mb-2">Mitigar</h3>
+                        <p class="text-gray-600">Medidas que visam reduzir um impacto inevitável. Ex: instalação de filtros, construção de passagens de fauna.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="flex items-center justify-center mx-auto h-16 w-16 rounded-full bg-green-100 text-green-600 text-3xl mb-4">⚖️</div>
+                        <h3 class="text-xl font-bold mb-2">Compensar</h3>
+                        <p class="text-gray-600">Ações para contrabalançar um impacto residual. Ex: criação de uma unidade de conservação para compensar o desmatamento.</p>
+                    </div>
+                     <div class="card p-6 text-center">
+                        <div class="flex items-center justify-center mx-auto h-16 w-16 rounded-full bg-purple-100 text-purple-600 text-3xl mb-4">📈</div>
+                        <h3 class="text-xl font-bold mb-2">Potencializar</h3>
+                        <p class="text-gray-600">Ações que maximizam os impactos positivos. Ex: capacitação da mão de obra local, fomento a fornecedores regionais.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="relative bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1637181155567-983e72b58f2e?q=80&w=2070&auto=format&fit=crop');">
+            <div class="absolute inset-0 bg-black/70"></div>
+            <div class="relative">
+                <section id="exemplo" class="py-16 md:pt-24 md:pb-16">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                        <div class="text-center mb-12">
+                            <h2 class="text-3xl md:text-4xl font-bold text-white">Exemplo prático e dinâmico</h2>
+                            <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-200">Selecione uma tipologia de empreendimento abaixo para ver exemplos de atividades e seus impactos ambientais associados.</p>
+                        </div>
+                        <div class="max-w-md mx-auto mb-8">
+                            <label for="project-type-selector" class="block text-sm font-medium text-gray-100 mb-2">Selecione a Tipologia do Empreendimento:</label>
+                            <select id="project-type-selector" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-[#81B29A] focus:border-[#81B29A] sm:text-sm">
+                                <option value="parque-eolico">Parque Eólico</option>
+                                <option value="rodovia">Rodovia</option>
+                                <option value="loteamento-residencial">Loteamento Residencial</option>
+                                <option value="porto">Porto</option>
+                                <option value="aterro-sanitario">Aterro Sanitário</option>
+                            </select>
+                        </div>
+                        <div class="w-full overflow-x-auto bg-white/20 backdrop-blur-sm rounded-lg shadow-md">
+                            <table class="min-w-full bg-transparent">
+                                <thead class="bg-black/20">
+                                    <tr>
+                                        <th class="text-left font-semibold text-white uppercase tracking-wider py-3 px-4">Atividade</th>
+                                        <th class="text-left font-semibold text-white uppercase tracking-wider py-3 px-4">Aspecto Ambiental</th>
+                                        <th class="text-left font-semibold text-white uppercase tracking-wider py-3 px-4">Impacto Ambiental</th>
+                                        <th class="text-center font-semibold text-white uppercase tracking-wider relative py-3 px-4 z-30">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <span>Valoração</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-xs font-normal normal-case">(N,M,A,D,R)</span>
+                                                    <span class="info-icon text-gray-300 cursor-pointer font-bold" data-tooltip="N: Natureza&#10;M: Magnitude&#10;A: Abrangência&#10;D: Duração&#10;R: Reversibilidade">ⓘ</span>
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <th class="text-center font-semibold text-white uppercase tracking-wider py-3 px-4">Significância</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="impact-table-body" class="divide-y divide-gray-400/30"></tbody>
+                            </table>
+                        </div>
+                        <div id="ia-sugestoes" class="mt-12 card p-6 md:p-8 bg-white/20 backdrop-blur-sm">
+                            <h3 class="text-2xl font-bold mb-4 text-white">Leve sua análise para o próximo nível</h3>
+                            <p class="text-gray-200">Clique abaixo para usar a Inteligência Artificial e gerar sugestões de medidas personalizadas para os impactos do exemplo selecionado acima.</p>
+                             <div class="mt-6 text-center">
+                                <button id="suggest-measures-btn" class="font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30">✨ Gerar Sugestões de Medidas com IA</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <footer class="py-8">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl text-center">
+                         <p class="text-gray-300 bg-black/10 backdrop-blur-sm p-2 rounded-md inline-block">&copy; 2025 Guia Interativo para AIA. Criado por Allison Macambira para fins educacionais.</p>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold text-[#3D405B]">✨ Sugestões Geradas por IA</h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+                    </div>
+                    <div id="modal-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="global-tooltip"></div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    const firstIcon = mobileMenuButton.querySelector('svg:first-child');
+                    const lastIcon = mobileMenuButton.querySelector('svg:last-child');
+                    if (firstIcon) firstIcon.classList.toggle('hidden');
+                    if (lastIcon) lastIcon.classList.toggle('hidden');
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        if (mobileMenuButton) {
+                            const firstIcon = mobileMenuButton.querySelector('svg:first-child');
+                            const lastIcon = mobileMenuButton.querySelector('svg:last-child');
+                            if (firstIcon) firstIcon.classList.remove('hidden');
+                            if (lastIcon) lastIcon.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+
+            const selectors = {
+                natureza: document.getElementById('natureza'),
+                magnitude: document.getElementById('magnitude'),
+                abrangencia: document.getElementById('abrangencia'),
+                duracao: document.getElementById('duracao'),
+                reversibilidade: document.getElementById('reversibilidade')
+            };
+            const resultText = document.getElementById('result-text');
+            const chartElement = document.getElementById('impactChart');
+            const chartLabels = ['Magnitude', 'Abrangência', 'Duração', 'Reversibilidade'];
+            let myRadarChart;
+
+            function updateSignificance() {
+                if (!Object.values(selectors).every(el => el) || !resultText || !chartElement) return;
+                const values = {
+                    natureza: parseInt(selectors.natureza.value, 10),
+                    magnitude: parseInt(selectors.magnitude.value, 10),
+                    abrangencia: parseInt(selectors.abrangencia.value, 10),
+                    duracao: parseInt(selectors.duracao.value, 10),
+                    reversibilidade: parseInt(selectors.reversibilidade.value, 10)
+                };
+                const sumOfAttributes = values.magnitude + values.abrangencia + values.duracao + values.reversibilidade;
+                const significance = sumOfAttributes * values.natureza;
+                let significanceLevel = getSignificanceLevel(significance);
+                let color = '#81B29A';
+                const absSignificance = Math.abs(significance);
+                
+                if (values.natureza < 0) {
+                    if (absSignificance <= 4) color = '#F2CC8F';
+                    else if (absSignificance <= 8) color = '#E07A5F';
+                    else color = '#D9534F';
+                } else {
+                    if (absSignificance <= 4) color = '#A8DADC';
+                    else if (absSignificance <= 8) color = '#81B29A';
+                    else color = '#457B9D';
+                }
+                resultText.textContent = `${significance} (${significanceLevel})`;
+                resultText.style.color = color;
+                const chartData = [values.magnitude, values.abrangencia, values.duracao, values.reversibilidade];
+
+                if (myRadarChart) {
+                    myRadarChart.data.datasets[0].data = chartData;
+                    myRadarChart.data.datasets[0].borderColor = color;
+                    myRadarChart.data.datasets[0].backgroundColor = `${color}4D`;
+                    myRadarChart.update();
+                } else {
+                    const ctx = chartElement.getContext('2d');
+                    myRadarChart = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [{
+                                label: 'Valoração',
+                                data: chartData,
+                                borderColor: color,
+                                backgroundColor: `${color}4D`,
+                                borderWidth: 3,
+                                pointBackgroundColor: color,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: color
+                            }]
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            responsive: true,
+                            scales: {
+                                r: {
+                                    angleLines: { display: false },
+                                    suggestedMin: 0,
+                                    suggestedMax: 3,
+                                    ticks: { stepSize: 1, display: false },
+                                    pointLabels: { font: { size: 14, family: 'Poppins', weight: 'bold' }, color: '#fff' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) { label += ': '; }
+                                            if (context.parsed.r !== null) { label += context.parsed.r; }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            if (Object.values(selectors).every(el => el) && resultText && chartElement) {
+                Object.values(selectors).forEach(selector => selector.addEventListener('change', updateSignificance));
+                updateSignificance();
+            }
+
+            const projectData = {
+                'parque-eolico': [ { atividade: 'Supressão de vegetação para acesso e instalação', aspecto: 'Remoção da cobertura vegetal', impacto: 'Perda de habitat e fragmentação de ecossistemas', n: -1, m: 2, a: 1, d: 3, r: 2 }, { atividade: 'Operação das turbinas eólicas', aspecto: 'Geração de ruído contínuo', impacto: 'Incomodidade à comunidade e afugentamento da fauna', n: -1, m: 2, a: 2, d: 2, r: 1 }, { atividade: 'Operação das turbinas eólicas', aspecto: 'Presença de pás em rotação', impacto: 'Mortalidade de aves e morcegos por colisão', n: -1, m: 3, a: 1, d: 2, r: 3 }, { atividade: 'Contratação de mão de obra', aspecto: 'Geração de postos de trabalho', impacto: 'Aumento da renda e dinamização da economia local', n: 1, m: 2, a: 2, d: 2, r: 1 }, { atividade: 'Geração de energia elétrica', aspecto: 'Produção de energia de fonte renovável', impacto: 'Redução da emissão de Gases de Efeito Estufa (GEE)', n: 1, m: 3, a: 3, d: 3, r: 3 } ],
+                'rodovia': [ { atividade: 'Terraplanagem e pavimentação', aspecto: 'Supressão de vegetação e impermeabilização do solo', impacto: 'Perda de biodiversidade e aumento do escoamento superficial', n: -1, m: 3, a: 2, d: 3, r: 3 }, { atividade: 'Operação da rodovia', aspecto: 'Emissão de poluentes por veículos', impacto: 'Piora da qualidade do ar na região', n: -1, m: 2, a: 2, d: 3, r: 2 }, { atividade: 'Operação da rodovia', aspecto: 'Presença da via como barreira física', impacto: 'Efeito de barreira para a fauna (atropelamentos)', n: -1, m: 3, a: 2, d: 3, r: 3 }, { atividade: 'Operação da rodovia', aspecto: 'Melhora no fluxo de transporte', impacto: 'Dinamização da economia regional e acesso a serviços', n: 1, m: 3, a: 2, d: 3, r: 3 }, { atividade: 'Construção da rodovia', aspecto: 'Geração de empregos temporários', impacto: 'Aumento da renda local durante a obra', n: 1, m: 2, a: 1, d: 1, r: 1 } ],
+                'loteamento-residencial': [ { atividade: 'Limpeza e terraplanagem do terreno', aspecto: 'Remoção total da vegetação e alteração do relevo', impacto: 'Eliminação de habitats e aumento da erosão', n: -1, m: 3, a: 1, d: 3, r: 3 }, { atividade: 'Instalação de infraestrutura (esgoto, água)', aspecto: 'Geração de resíduos de construção', impacto: 'Possível contaminação do solo e água', n: -1, m: 2, a: 1, d: 1, r: 2 }, { atividade: 'Ocupação urbana da área', aspecto: 'Aumento da área impermeabilizada', impacto: 'Aumento do risco de inundações a jusante', n: -1, m: 2, a: 2, d: 3, r: 2 }, { atividade: 'Ocupação urbana da área', aspecto: 'Geração de esgoto doméstico', impacto: 'Aumento da carga orgânica nos corpos d\'água', n: -1, m: 2, a: 1, d: 3, r: 1 }, { atividade: 'Disponibilização de novas moradias', aspecto: 'Aumento da oferta imobiliária', impacto: 'Atendimento da demanda habitacional e valorização da área', n: 1, m: 2, a: 1, d: 3, r: 3 } ],
+                'porto': [ { atividade: 'Dragagem para aprofundamento do canal', aspecto: 'Ressuspensão de sedimentos do fundo', impacto: 'Aumento da turbidez da água e prejuízo à vida aquática', n: -1, m: 3, a: 2, d: 2, r: 2 }, { atividade: 'Operação de navios e maquinário', aspecto: 'Risco de vazamento de óleo e combustíveis', impacto: 'Contaminação do ecossistema marinho e costeiro', n: -1, m: 3, a: 3, d: 2, r: 3 }, { atividade: 'Construção de quebra-mares e píeres', aspecto: 'Alteração da hidrodinâmica costeira', impacto: 'Mudanças nos padrões de erosão e assoreamento das praias', n: -1, m: 3, a: 2, d: 3, r: 3 }, { atividade: 'Operação do porto', aspecto: 'Introdução de espécies exóticas via água de lastro', impacto: 'Desequilíbrio do ecossistema local', n: -1, m: 2, a: 3, d: 3, r: 3 }, { atividade: 'Movimentação de cargas', aspecto: 'Facilitação do comércio nacional e internacional', impacto: 'Fomento à economia e geração de empregos', n: 1, m: 3, a: 3, d: 3, r: 3 } ],
+                'aterro-sanitario': [ { atividade: 'Disposição de resíduos sólidos urbanos', aspecto: 'Decomposição da matéria orgânica', impacto: 'Geração de chorume com potencial de contaminar solo e lençol freático', n: -1, m: 3, a: 1, d: 3, r: 2 }, { atividade: 'Disposição de resíduos sólidos urbanos', aspecto: 'Geração de gases de aterro (metano)', impacto: 'Emissão de gases de efeito estufa e risco de explosões', n: -1, m: 3, a: 1, d: 3, r: 1 }, { atividade: 'Tráfego de caminhões de lixo', aspecto: 'Emissão de ruído e odores', impacto: 'Desvalorização imobiliária e incômodo à comunidade vizinha', n: -1, m: 2, a: 2, d: 3, r: 1 }, { atividade: 'Operação do aterro', aspecto: 'Atração de vetores (ratos, urubus)', impacto: 'Risco à saúde pública na área de entorno', n: -1, m: 2, a: 2, d: 3, r: 1 }, { atividade: 'Disposição final adequada de resíduos', aspecto: 'Solução para o lixo gerado na cidade', impacto: 'Melhora na saúde pública e saneamento da cidade', n: 1, m: 3, a: 2, d: 3, r: 3 } ]
+            };
+            const projectSelector = document.getElementById('project-type-selector');
+            const tableBody = document.getElementById('impact-table-body');
+
+            function getSignificanceLevel(value) {
+                const absValue = Math.abs(value);
+                if (absValue <= 4) return 'Baixa';
+                if (absValue <= 8) return 'Média';
+                return 'Alta';
+            }
+
+            function populateImpactTable(projectType) {
+                if (!projectData[projectType] || !tableBody) return;
+                tableBody.innerHTML = '';
+                const impacts = projectData[projectType];
+                impacts.forEach(impact => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-white/10';
+                    const significance = (impact.m + impact.a + impact.d + impact.r) * impact.n;
+                    const significanceLevel = getSignificanceLevel(significance);
+                    const significanceColor = impact.n > 0 ? 'text-green-400' : 'text-red-400';
+                    const impactColor = impact.n > 0 ? 'text-green-400' : 'text-red-400';
+                    row.innerHTML = `<td class="font-medium p-3 text-white">${impact.atividade}</td><td class="p-3 text-gray-200">${impact.aspecto}</td><td class="p-3 ${impactColor}">${impact.impacto}</td><td class="text-center p-3 text-sm text-gray-300">(${impact.n > 0 ? '+' : ''}${impact.n}, ${impact.m}, ${impact.a}, ${impact.d}, ${impact.r})</td><td class="text-center p-3"><span class="font-bold ${significanceColor}">${significance}</span> (${significanceLevel})</td>`;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            if (projectSelector) {
+                projectSelector.addEventListener('change', (e) => populateImpactTable(e.target.value));
+                populateImpactTable(projectSelector.value); // Initial population
+            }
+            
+            const globalTooltip = document.getElementById('global-tooltip');
+
+            document.body.addEventListener('mouseover', (e) => {
+                const icon = e.target.closest('.info-icon');
+                if (icon) {
+                    const tooltipText = icon.getAttribute('data-tooltip');
+                    if (globalTooltip && tooltipText) {
+                        globalTooltip.innerHTML = tooltipText.replace(/\n/g, '<br>');
+                        const rect = icon.getBoundingClientRect();
+                        globalTooltip.style.left = `${rect.left + rect.width / 2}px`;
+                        globalTooltip.style.top = `${rect.top}px`;
+                        globalTooltip.style.transform = 'translate(-50%, -110%)';
+                        globalTooltip.style.display = 'block';
+                    }
+                }
+            });
+
+            document.body.addEventListener('mouseout', (e) => {
+                const icon = e.target.closest('.info-icon');
+                if (icon) {
+                     if (globalTooltip) {
+                        globalTooltip.style.display = 'none';
+                    }
+                }
+            });
+
+
+            const suggestMeasuresBtn = document.getElementById('suggest-measures-btn');
+            const identifyImpactBtn = document.getElementById('identify-impact-btn');
+            const aiModal = document.getElementById('ai-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const modalContent = document.getElementById('modal-content');
+            const activityInput = document.getElementById('activity-input');
+            const iaIdentifierResults = document.getElementById('ia-identifier-results');
+            const apiKey = ""; 
+
+            if(suggestMeasuresBtn) {
+                suggestMeasuresBtn.addEventListener('click', async () => {
+                    if (aiModal) aiModal.classList.remove('hidden');
+                    if (modalContent) modalContent.innerHTML = '<div class="flex justify-center items-center p-8"><div class="loader"></div></div>';
+                    const tableRows = document.querySelectorAll('#impact-table-body tr');
+                    if (!tableRows) return;
+                    const negativeImpacts = Array.from(tableRows).filter(row => row.cells[2] && (row.cells[2].classList.contains('text-red-600') || row.cells[2].classList.contains('text-red-400'))).map(row => row.cells[2].textContent.trim());
+                    const positiveImpacts = Array.from(tableRows).filter(row => row.cells[2] && (row.cells[2].classList.contains('text-green-600') || row.cells[2].classList.contains('text-green-400'))).map(row => row.cells[2].textContent.trim());
+                    const selectedProject = projectSelector ? projectSelector.options[projectSelector.selectedIndex].text : "um projeto";
+                    const prompt = `Para um projeto de ${selectedProject}, sugira medidas concretas e práticas para os seguintes impactos ambientais. Separe as sugestões em medidas mitigadoras (para os impactos negativos) e medidas potencializadoras (para os positivos).\nImpactos Negativos: ${negativeImpacts.join(', ')}.\nImpactos Positivos: ${positiveImpacts.join(', ')}.`;
+                    const payload = { contents: [{role: "user", parts: [{text: prompt}]}], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "medidas_mitigadoras": { type: "ARRAY", items: { type: "OBJECT", properties: { "impacto": {"type": "STRING"}, "sugestao": {"type": "STRING"} } } }, "medidas_potencializadoras": { type: "ARRAY", items: { type: "OBJECT", properties: { "impacto": {"type": "STRING"}, "sugestao": {"type": "STRING"} } } } } } } };
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                        const result = await response.json();
+                        if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                            const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                            let html = '<div class="grid md:grid-cols-2 gap-6">';
+                            if (data.medidas_mitigadoras && data.medidas_mitigadoras.length > 0) {
+                                html += '<div><h4 class="font-bold text-lg mb-2 text-red-600">Medidas Mitigadoras</h4><ul class="space-y-4">';
+                                data.medidas_mitigadoras.forEach(item => { html += `<li class="p-3 bg-red-50 rounded-lg"><strong class="block text-red-800">${item.impacto}</strong><p class="text-gray-700">${item.sugestao}</p></li>`; });
+                                html += '</ul></div>';
+                            }
+                            if (data.medidas_potencializadoras && data.medidas_potencializadoras.length > 0) {
+                                html += '<div><h4 class="font-bold text-lg mb-2 text-green-600">Medidas Potencializadoras</h4><ul class="space-y-4">';
+                                data.medidas_potencializadoras.forEach(item => { html += `<li class="p-3 bg-green-50 rounded-lg"><strong class="block text-green-800">${item.impacto}</strong><p class="text-gray-700">${item.sugestao}</p></li>`; });
+                                html += '</ul></div>';
+                            }
+                            html += '</div>';
+                            if (modalContent) modalContent.innerHTML = html;
+                        } else {
+                           if (modalContent) modalContent.innerHTML = '<p class="text-red-500">Não foi possível gerar sugestões. A resposta da API foi inesperada.</p>';
+                        }
+                    } catch (error) {
+                        if (modalContent) modalContent.innerHTML = `<p class="text-red-500">Erro: ${error.message}.</p>`;
+                    }
+                });
+            }
+
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => { if (aiModal) aiModal.classList.add('hidden'); });
+            }
+            
+            if (identifyImpactBtn) {
+                identifyImpactBtn.addEventListener('click', async () => {
+                    if (!activityInput || !iaIdentifierResults) return;
+                    const activity = activityInput.value.trim();
+                    if (!activity) {
+                        iaIdentifierResults.innerHTML = '<p class="text-center text-red-500">Por favor, descreva uma atividade.</p>';
+                        return;
+                    }
+                    iaIdentifierResults.innerHTML = '<div class="flex justify-center items-center p-8"><div class="loader"></div></div>';
+                    const prompt = `Para a atividade de projeto "${activity}", identifique os potenciais aspectos ambientais e os consequentes impactos ambientais. Separe os impactos em positivos e negativos.`;
+                    const payload = { contents: [{role: "user", parts: [{text: prompt}]}], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "aspectos_ambientais": { "type": "ARRAY", "items": { "type": "STRING" } }, "impactos_positivos": { "type": "ARRAY", "items": { "type": "STRING" } }, "impactos_negativos": { "type": "ARRAY", "items": { "type": "STRING" } } } } } };
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                        const result = await response.json();
+                        if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                            const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                            let html = '<div class="space-y-6">';
+                            if (data.aspectos_ambientais && data.aspectos_ambientais.length > 0) {
+                                html += '<div class="card p-4"><h4 class="font-bold text-lg mb-2 text-gray-700">Aspectos Ambientais</h4><ul class="list-disc list-inside text-gray-600">';
+                                data.aspectos_ambientais.forEach(item => { html += `<li>${item}</li>`; });
+                                html += '</ul></div>';
+                            }
+                            if (data.impactos_positivos && data.impactos_positivos.length > 0) {
+                                html += '<div class="card p-4"><h4 class="font-bold text-lg mb-2 text-green-600">Impactos Positivos Potenciais</h4><ul class="list-disc list-inside text-green-700">';
+                                data.impactos_positivos.forEach(item => { html += `<li>${item}</li>`; });
+                                html += '</ul></div>';
+                            }
+                            if (data.impactos_negativos && data.impactos_negativos.length > 0) {
+                                html += '<div class="card p-4"><h4 class="font-bold text-lg mb-2 text-red-600">Impactos Negativos Potenciais</h4><ul class="list-disc list-inside text-red-700">';
+                                data.impactos_negativos.forEach(item => { html += `<li>${item}</li>`; });
+                                html += '</ul></div>';
+                            }
+                            html += '</div>';
+                            iaIdentifierResults.innerHTML = html;
+                        } else {
+                            iaIdentifierResults.innerHTML = '<p class="text-center text-red-500">Não foi possível gerar a análise.</p>';
+                        }
+                    } catch (error) {
+                        iaIdentifierResults.innerHTML = `<p class="text-center text-red-500">Erro: ${error.message}.</p>`;
+                    }
+                });
+            }
+
+            if (aiModal) {
+                aiModal.addEventListener('click', (e) => { if (e.target === aiModal) { aiModal.classList.add('hidden'); } });
+            }
+        });
+    </script>
+</body>
+</html>
